@@ -61,6 +61,8 @@ public class ExoActivity extends Activity {
         button3.setEnabled(false);
         button4.setEnabled(false);
 
+        textView.setText("Idle");
+
         final Uri uri = Uri.parse(URL_HYRULE_STREAM);
 
         exoPlayer = ExoPlayer.Factory.newInstance(1, 500, 500);
@@ -77,7 +79,7 @@ public class ExoActivity extends Activity {
                     default:
                         Log.v("EXO_VB", "exoPlayer waiting: " + playbackState);
 //                        button1.setEnabled(false);
-                        textView.setText("Waiting");
+                        textView.setText("Preparing");
                 }
 
                 textView.setTextColor(playWhenReady ? Color.GREEN : Color.RED);
@@ -107,21 +109,18 @@ public class ExoActivity extends Activity {
                 BUFFER_SEGMENT_COUNT * BUFFER_SEGMENT_SIZE, new AdtsExtractor());
 
 
-        MediaCodecAudioTrackRenderer audioRenderer = new MediaCodecAudioTrackRenderer(sampleSource,
+        final MediaCodecAudioTrackRenderer audioRenderer = new MediaCodecAudioTrackRenderer(sampleSource,
                 MediaCodecSelector.DEFAULT, null, true, eventHandler, createEventListener(),
                 AudioCapabilities.getCapabilities(this), AudioManager.STREAM_MUSIC);
-
-        exoPlayer.prepare(audioRenderer);
-        Log.v("EXO_VB", "exoPlayer preparing");
-    }
-
-    @Override
-    protected void onStart() {
-        super.onStart();
 
         button1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                Log.v("EXO_VB", "Play");
+                if(exoPlayer.getPlaybackState() == ExoPlayer.STATE_IDLE){
+                    exoPlayer.prepare(audioRenderer);
+                    Log.v("EXO_VB", "exoPlayer preparing");
+                }
                 exoPlayer.seekTo(0);
                 exoPlayer.setPlayWhenReady(true);
 
@@ -134,22 +133,6 @@ public class ExoActivity extends Activity {
                 exoPlayer.setPlayWhenReady(false);
             }
         });
-
-//        button3.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                Log.v("EXO_VB", "exoPlayer duration: " + exoPlayer.getDuration());
-//                exoPlayer.stop();
-//                exoPlayer.seekTo(0);
-//            }
-//        });
-//
-//        button4.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                exoPlayer.prepare();
-//            }
-//        });
     }
 
     @Override
