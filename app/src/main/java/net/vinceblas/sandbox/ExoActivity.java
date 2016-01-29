@@ -23,10 +23,8 @@ import com.google.android.exoplayer.audio.AudioTrack;
 import com.google.android.exoplayer.extractor.ExtractorSampleSource;
 import com.google.android.exoplayer.extractor.ts.AdtsExtractor;
 import com.google.android.exoplayer.upstream.Allocator;
-import com.google.android.exoplayer.upstream.DataSource;
 import com.google.android.exoplayer.upstream.DefaultAllocator;
 import com.google.android.exoplayer.upstream.DefaultBandwidthMeter;
-import com.google.android.exoplayer.upstream.DefaultUriDataSource;
 import com.google.android.exoplayer.util.Util;
 
 import butterknife.Bind;
@@ -103,7 +101,14 @@ public class ExoActivity extends Activity {
         DefaultBandwidthMeter bandwidthMeter = new DefaultBandwidthMeter(eventHandler, null);
         Allocator allocator = new DefaultAllocator(BUFFER_SEGMENT_SIZE);
 
-        DataSource dataSource = new DefaultUriDataSource(this, bandwidthMeter, userAgent);
+        IcyHttpDataSource dataSource = new IcyHttpDataSource(userAgent, null, bandwidthMeter);
+        dataSource.setRequestProperty("Icy-MetaData", "1");
+        dataSource.setIcyMetaDataCallback(new IcyInputStream.IcyMetadataCallback() {
+            @Override
+            public void playerMetadata(String key, String value) {
+                Log.i("ICYDATA", "Metadata: {" + key + ":" + value + "}");
+            }
+        });
 
         ExtractorSampleSource sampleSource = new ExtractorSampleSource(uri, dataSource, allocator,
                 BUFFER_SEGMENT_COUNT * BUFFER_SEGMENT_SIZE, new AdtsExtractor());
