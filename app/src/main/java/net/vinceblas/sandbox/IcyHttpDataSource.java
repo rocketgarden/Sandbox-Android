@@ -43,9 +43,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Copied from DefaultHttpDataSource, modified to use IcyDataStream
+ * Copied from DefaultHttpDataSource (v1.5.4), modified to use IcyDataStream
  */
-
 
 /**
  * A {@link HttpDataSource} that uses Android's {@link HttpURLConnection}.
@@ -67,7 +66,7 @@ public class IcyHttpDataSource implements HttpDataSource {
     public static final int DEFAULT_READ_TIMEOUT_MILLIS = 8 * 1000;
 
     private static final int MAX_REDIRECTS = 20; // Same limit as okhttp.
-    private static final String TAG = "DefaultHttpDataSource";
+    private static final String TAG = "IcyHttpDataSource";
     private static final Pattern CONTENT_RANGE_HEADER =
             Pattern.compile("^bytes (\\d+)-(\\d+)/(\\d+)$");
     private static final AtomicReference<byte[]> skipBufferReference = new AtomicReference<>();

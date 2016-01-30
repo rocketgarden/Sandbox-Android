@@ -1,4 +1,4 @@
-package net.vinceblas.sandbox;
+package net.vinceblas.sandbox.activities;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
@@ -26,6 +26,10 @@ import com.google.android.exoplayer.upstream.Allocator;
 import com.google.android.exoplayer.upstream.DefaultAllocator;
 import com.google.android.exoplayer.upstream.DefaultBandwidthMeter;
 import com.google.android.exoplayer.util.Util;
+
+import net.vinceblas.sandbox.IcyHttpDataSource;
+import net.vinceblas.sandbox.IcyInputStream;
+import net.vinceblas.sandbox.R;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
@@ -56,8 +60,8 @@ public class ExoActivity extends Activity {
 
         button3.setText("x");
         button4.setText("x");
-        button3.setEnabled(false);
-        button4.setEnabled(false);
+        button3.setVisibility(View.GONE);
+        button4.setVisibility(View.GONE);
 
         textView.setText("Idle");
 

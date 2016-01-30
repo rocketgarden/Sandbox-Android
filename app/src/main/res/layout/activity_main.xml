@@ -6,7 +6,7 @@
     android:padding="@dimen/activity_vertical_margin"
     android:gravity="center_horizontal"
     android:orientation="vertical"
-    tools:context=".MainActivity">
+    tools:context=".activities.MainActivity">
 
     <Button
         android:id="@+id/button"
