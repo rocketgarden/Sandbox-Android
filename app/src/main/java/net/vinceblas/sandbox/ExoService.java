@@ -1,13 +1,19 @@
 package net.vinceblas.sandbox;
 
+import android.app.Notification;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.media.AudioManager;
 import android.media.MediaCodec;
 import android.net.Uri;
 import android.os.Binder;
 import android.os.Handler;
 import android.os.IBinder;
+import android.support.v4.app.NotificationCompat;
+import android.support.v4.app.NotificationManagerCompat;
 import android.util.Log;
 
 import com.google.android.exoplayer.ExoPlaybackException;
@@ -24,6 +30,8 @@ import com.google.android.exoplayer.upstream.DefaultAllocator;
 import com.google.android.exoplayer.upstream.DefaultBandwidthMeter;
 import com.google.android.exoplayer.util.Util;
 
+import net.vinceblas.sandbox.activities.ExoServiceActivity;
+
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
@@ -33,12 +41,12 @@ import java.util.Set;
 public class ExoService extends Service {
 
     public static final String URL_HYRULE_STREAM = "http://listen.radiohyrule.com/listen.aac";
+    public static final String USER_AGENT_PREFIX = "VB_Sandbox"; //todo change this?
 
     private static final int BUFFER_SEGMENT_SIZE = 64 * 1024;
     private static final int BUFFER_SEGMENT_COUNT = 256;
     private static final String LOG_TAG = ExoService.class.getSimpleName();
-    public static final String USER_AGENT_PREFIX = "VB_Sandbox"; //todo change this?
-    private MediaCodecAudioTrackRenderer audioRenderer;
+    private static final int NOTIFICATION_ID = 63556;
 
     public interface PlaybackStatusListener {
 
@@ -53,12 +61,20 @@ public class ExoService extends Service {
 
     private Handler eventHandler;
     private ExoPlayer exoPlayer;
+    private MediaCodecAudioTrackRenderer audioRenderer;
+
+    private String statusText = "Playing";
 
     private Set<PlaybackStatusListener> listeners;
 
     @Override
     public IBinder onBind(Intent intent) {
         return new PlaybackBinder(this);
+    }
+
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        return super.onStartCommand(intent, flags, startId);
     }
 
     @Override
@@ -79,8 +95,9 @@ public class ExoService extends Service {
         dataSource.setIcyMetaDataCallback(new IcyInputStream.IcyMetadataCallback() {
             @Override
             public void playerMetadata(String key, String value) {
-                //todo update notification
                 Log.d(LOG_TAG, "ExoPlayer Metadata: { " + key + " : \"" + value + "\" }");
+                statusText = value;
+                startForeground(NOTIFICATION_ID, createNotification(statusText));
                 notifyMetadata(Collections.singletonMap(key, value));
             }
         });
@@ -105,7 +122,6 @@ public class ExoService extends Service {
     //todo make sticky
 
     public void startPlayback(){
-        //todo foreground notification
         startSelf();
         if(exoPlayer.getPlaybackState() == ExoPlayer.STATE_IDLE){
             exoPlayer.prepare(audioRenderer);
@@ -114,12 +130,15 @@ public class ExoService extends Service {
             exoPlayer.seekTo(0); //move to "live edge" of stream
         }
         exoPlayer.setPlayWhenReady(true);
+        startForeground(NOTIFICATION_ID, createNotification(statusText));
     }
 
     public void stopPlayback(){
-        //todo un-foreground notification
         stopSelf(); //we'll actually keep running if something is bound to us
+        //todo consider leaving running or staying foreground if we want to keep notification around?
         exoPlayer.setPlayWhenReady(false);
+        stopForeground(false);
+        NotificationManagerCompat.from(this).notify(NOTIFICATION_ID, createNotification("Paused"));
     }
 
     /**
@@ -137,6 +156,21 @@ public class ExoService extends Service {
 
     public int getCurrentPlaybackStatus() {
         return mapPlaybackStatus(exoPlayer.getPlayWhenReady(), exoPlayer.getPlaybackState());
+    }
+
+    private Notification createNotification(String text){
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this);
+        builder.setSmallIcon(R.drawable.ic_notification_fg);
+        Bitmap icon = BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher);
+        builder.setLargeIcon(icon);
+        builder.setContentTitle("Vince - Sandbox");
+        builder.setContentText(text);
+
+        Intent intent = new Intent(this, ExoServiceActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, 0);
+        builder.setContentIntent(pendingIntent);
+        return builder.build();
     }
 
     private void notifyStatusChanged(int status){ //todo inline?
